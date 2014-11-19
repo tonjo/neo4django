@@ -149,10 +149,10 @@ class Relationship(object):
             raise TypeError("Relationships may only extend from Nodes.")
         self.creation_counter = source.creation_counter
 
-        # XXX this is to cover strange situations like accidental overriding 
-        # of abstract models' reverse relationships like issue #190 
-        if hasattr(source, name): 
-            return 
+        # XXX this is to cover strange situations like accidental overriding
+        # of abstract models' reverse relationships like issue #190
+        if hasattr(source, name):
+            return
 
         # make sure this relationship doesn't overlap with another of the same
         # type and direction
@@ -239,6 +239,7 @@ class BoundRelationship(AttrRouter, DeferredAttribute):
                      'meta',
                      'get_internal_type',
                      'help_text',
+                     'verbose_name',
                      'null',
                      'has_default',
                      # form handling
@@ -732,9 +733,9 @@ class RelationshipInstance(models.Manager):
                                                     ordered=self.ordered))
             rels_by_node = defaultdict(list)
             for neo_rel in neo_rels:
-                other_end = neo_rel.start if neo_rel.end == self._obj.node else neo_rel.end
-                rels_by_node[other_end.url].append(neo_rel)
-
+                rels_by_node[neo_rel.start.url].append(neo_rel)
+                rels_by_node[neo_rel.end.url].append(neo_rel)
+                
             for obj in objs:
                 candidate_rels = rels_by_node[obj.node.url] if hasattr(obj, 'node') else []
                 if candidate_rels:

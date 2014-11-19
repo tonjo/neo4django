@@ -421,7 +421,17 @@ def cypher_predicates_from_q(q):
             value_exp = 'ID(%s)' % identifier
         else:
             value_exp = '%s.%s!' % (identifier, q.field.attname)
-        return '(%s)' % cypher_predicate_from_condition(value_exp, q)
+
+        # Add an 'HAS()' condition to case unsensitive lookup
+        if q.operator in (OPERATORS.IEXACT, OPERATORS.ICONTAINS,
+                        OPERATORS.ISTARTSWITH, OPERATORS.IENDSWITH):
+            return 'HAS(%s) AND (%s)' % (
+                # Remove "!" from value_exp
+                value_exp[:-1], 
+                cypher_predicate_from_condition(value_exp, q)
+            )
+        else:
+            return '(%s)' % cypher_predicate_from_condition(value_exp, q)
     children = list(not_none(cypher_predicates_from_q(c) for c in q.children))
     if len(children) > 0:
         expr = (" %s " % q.connector).join(children)
